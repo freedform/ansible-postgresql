@@ -1,0 +1,10 @@
+- name: Promote replica
+  when: postgresql_role == 'replica'
+  ansible.builtin.command: "sudo -u postgres psql -c 'SELECT pg_promote();'"
+  changed_when: false
+
+- name: Promotion message
+  ansible.builtin.debug:
+    msg: >
+      Promotion is complete, however postgresql_role variable is still 'replica'
+      Kindly set postgresql_role to 'primary' in the inventory file for {{ inventory_hostname }}

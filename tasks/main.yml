@@ -1,0 +1,29 @@
+- name: Create postgresql_action_list
+  ansible.builtin.set_fact:
+    postgresql_action_list: "{{ postgresql_actions.split(',') }}"
+
+- name: Validate postgresql_action_list
+  ansible.builtin.assert:
+    that:
+      - postgresql_action_list | length > 0
+      - postgresql_action_list | difference(postgresql_supported_actions) | length == 0
+
+- name: Install PostgreSQL
+  when: "'install' in postgresql_action_list"
+  ansible.builtin.include_tasks: install.yml
+
+- name: Upload configuration files
+  when: "'upload_config' in postgresql_action_list"
+  ansible.builtin.include_tasks: upload_config.yml
+
+- name: Configure replication
+  when: "'replication' in postgresql_action_list"
+  ansible.builtin.include_tasks: replication.yml
+
+- name: Promote replica
+  when: "'promote' in postgresql_action_list"
+  ansible.builtin.include_tasks: promote.yml
+
+- name: Control PostgreSQL
+  when: "'state_control' in postgresql_action_list"
+  ansible.builtin.include_tasks: state_control.yml

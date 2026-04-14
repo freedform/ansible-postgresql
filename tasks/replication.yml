@@ -1,0 +1,114 @@
+- name: Validate variables for replication.yml task
+  ansible.builtin.assert:
+    that:
+      - postgresql_role is defined
+      - postgresql_replication_slot is defined
+      - postgresql_replication_username is defined
+      - postgresql_replication_password is defined
+      - postgresql_peer_ip is defined
+      - postgresql_data_dir is defined
+
+- name: Actions for primary node
+  when: postgresql_role == "primary"
+  block:
+    - name: Ensure temporary ansible DB role exists with password
+      become: true
+      ansible.builtin.command:
+        cmd: >
+          sudo -u postgres psql -v ON_ERROR_STOP=1 -tAc
+          "DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT FROM pg_roles WHERE rolname = 'ansible'
+            ) THEN
+              CREATE ROLE ansible WITH LOGIN SUPERUSER PASSWORD '{{ postgresql_ansible_temp_password }}';
+            ELSE
+              ALTER ROLE ansible WITH PASSWORD '{{ postgresql_ansible_temp_password }}';
+            END IF;
+          END
+          $$;"
+      changed_when: false
+
+    - name: Configure replication user
+      community.postgresql.postgresql_user:
+        login_user: ansible
+        login_password: "{{ postgresql_ansible_temp_password }}"
+        login_db: postgres
+        name: "{{ postgresql_replication_username }}"
+        password: "{{ postgresql_replication_password }}"
+        role_attr_flags: REPLICATION,LOGIN
+        state: present
+
+    - name: Create replication slot
+      community.postgresql.postgresql_slot:
+        login_user: ansible
+        login_password: "{{ postgresql_ansible_temp_password }}"
+        login_db: postgres
+        name: "{{ postgresql_replication_slot }}"
+        slot_type: physical
+        state: present
+
+    - name: Remove temporary ansible DB role
+      ansible.builtin.command:
+        cmd: >
+          sudo -u postgres psql -v ON_ERROR_STOP=1 -c
+          "DROP ROLE IF EXISTS ansible;"
+      changed_when: false
+
+
+- name: Actions for replica node
+  when: postgresql_role == "replica"
+  block:
+    - name: Stop PostgreSQL daemon
+      ansible.builtin.service:
+        name: postgresql
+        state: stopped
+
+    - name: Get stat for "{{ postgresql_data_dir }}"
+      ansible.builtin.stat:
+        path: "{{ postgresql_data_dir }}"
+      register: postgresql_data_dir_stat
+
+    - name: Backup of "{{ postgresql_data_dir }}"
+      when: postgresql_data_backup | default(true)
+      ansible.builtin.command: "mv {{ postgresql_data_dir }} {{ postgresql_data_dir }}_backup_{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+      changed_when: false
+
+    - name: Remove old data directory
+      ansible.builtin.file:
+        path: "{{ postgresql_data_dir }}"
+        state: absent
+
+    - name: Recreate data directory
+      ansible.builtin.file:
+        path: "{{ postgresql_data_dir }}"
+        state: directory
+        owner: "{{ postgresql_data_dir_stat.stat.pw_name }}"
+        group: "{{ postgresql_data_dir_stat.stat.gr_name }}"
+        mode: "{{ postgresql_data_dir_stat.stat.mode }}"
+
+    - name: Create .pgpass for replication user
+      ansible.builtin.copy:
+        dest: "/var/lib/postgresql/.pgpass"
+        owner: postgres
+        group: postgres
+        mode: "0600"
+        content: "{{ postgresql_peer_ip }}:5432:*:{{ postgresql_replication_username }}:{{ postgresql_replication_password }}"
+
+    - name: Run pg_basebackup to initialize standby
+      ansible.builtin.command:
+        cmd: >
+          sudo -u postgres pg_basebackup
+          -h {{ postgresql_peer_ip }}
+          -D {{ postgresql_data_dir }}
+          -U {{ postgresql_replication_username }}
+          -Fp -R -w -X stream
+          --slot={{ postgresql_replication_slot }}
+      changed_when: false
+      async: 7200
+      poll: 30
+
+    - name: Starting PostgreSQL daemon
+      ansible.builtin.service:
+        name: postgresql
+        state: started

@@ -1,0 +1,16 @@
+postgresql_supported_actions:
+  - install
+  - upload_config
+  - replication
+  - promote
+  - state_control
+
+postgresql_supported_states:
+  - started
+  - stopped
+  - restarted
+  - reloaded
+
+postgresql_supported_roles:
+  - primary
+  - replica

@@ -1,0 +1,32 @@
+- name: Validate variables for upload_config.yml task
+  ansible.builtin.assert:
+    that:
+      - postgresql_config_dir is defined
+      - postgresql_file_owner is defined
+      - postgresql_file_group is defined
+      - postgresql_config is defined
+      - postgresql_config is mapping
+    fail_msg: "PostgreSQL configuration variables are not properly defined."
+
+- name: Upload main config
+  when:
+    - postgresql_config.main is defined
+    - postgresql_config.main is mapping
+  ansible.builtin.template:
+    src: postgresql.conf.j2
+    dest: "{{ postgresql_config_dir }}/postgresql.conf"
+    owner: "{{ postgresql_file_owner }}"
+    group: "{{ postgresql_file_group }}"
+    mode: "0644"
+
+- name: Upload hba config
+  when:
+    - postgresql_config.hba is defined
+    - postgresql_config.hba is iterable
+    - postgresql_config.hba is not string
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: "{{ postgresql_config_dir }}/pg_hba.conf"
+    owner: "{{ postgresql_file_owner }}"
+    group: "{{ postgresql_file_group }}"
+    mode: "0640"

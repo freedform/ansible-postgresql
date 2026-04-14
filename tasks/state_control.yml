@@ -1,0 +1,9 @@
+- name: Validate variables for state_control.yml task
+  ansible.builtin.assert:
+    that:
+      - postgresql_state in postgresql_supported_states
+
+- name: Enable PostgreSQL daemon
+  ansible.builtin.service:
+    name: postgresql
+    state: "{{ postgresql_state }}"
