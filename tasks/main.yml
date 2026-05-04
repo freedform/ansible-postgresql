@@ -8,22 +8,8 @@
       - postgresql_action_list | length > 0
       - postgresql_action_list | difference(postgresql_supported_actions) | length == 0
 
-- name: Install PostgreSQL
-  when: "'install' in postgresql_action_list"
-  ansible.builtin.include_tasks: install.yml
-
-- name: Upload configuration files
-  when: "'upload_config' in postgresql_action_list"
-  ansible.builtin.include_tasks: upload_config.yml
-
-- name: Configure replication
-  when: "'replication' in postgresql_action_list"
-  ansible.builtin.include_tasks: replication.yml
-
-- name: Promote replica
-  when: "'promote' in postgresql_action_list"
-  ansible.builtin.include_tasks: promote.yml
-
-- name: Control PostgreSQL
-  when: "'state_control' in postgresql_action_list"
-  ansible.builtin.include_tasks: state_control.yml
+- name: Deploy PostgreSQL
+  ansible.builtin.include_tasks: "{{ task_name }}.yml"
+  loop: "{{ postgresql_action_list }}"
+  loop_control:
+    loop_var: task_name
