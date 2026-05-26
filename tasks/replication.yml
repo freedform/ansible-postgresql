@@ -2,17 +2,18 @@
   ansible.builtin.assert:
     that:
       - postgresql_role is defined
+      - postgresql_role in postgresql_supported_roles
       - postgresql_replication_slot is defined
       - postgresql_replication_username is defined
       - postgresql_replication_password is defined
       - postgresql_peer_ip is defined
       - postgresql_data_dir is defined
+      - postgresql_ansible_temp_password is defined
 
 - name: Actions for primary node
   when: postgresql_role == "primary"
   block:
     - name: Ensure temporary ansible DB role exists with password
-      become: true
       ansible.builtin.command:
         cmd: >
           sudo -u postgres psql -v ON_ERROR_STOP=1 -tAc
@@ -28,6 +29,7 @@
           END
           $$;"
       changed_when: false
+      no_log: true
 
     - name: Configure replication user
       community.postgresql.postgresql_user:
@@ -38,6 +40,7 @@
         password: "{{ postgresql_replication_password }}"
         role_attr_flags: REPLICATION,LOGIN
         state: present
+      no_log: true
 
     - name: Create replication slot
       community.postgresql.postgresql_slot:
@@ -47,6 +50,7 @@
         name: "{{ postgresql_replication_slot }}"
         slot_type: physical
         state: present
+      no_log: true
 
     - name: Remove temporary ansible DB role
       ansible.builtin.command:
@@ -70,9 +74,9 @@
       register: postgresql_data_dir_stat
 
     - name: Backup of "{{ postgresql_data_dir }}"
-      when: postgresql_data_backup | default(true)
+      when: postgresql_data_backup
       ansible.builtin.command: "mv {{ postgresql_data_dir }} {{ postgresql_data_dir }}_backup_{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
-      changed_when: false
+      changed_when: true
 
     - name: Remove old data directory
       ansible.builtin.file:
@@ -94,6 +98,7 @@
         group: postgres
         mode: "0600"
         content: "{{ postgresql_peer_ip }}:5432:*:{{ postgresql_replication_username }}:{{ postgresql_replication_password }}"
+      no_log: true
 
     - name: Run pg_basebackup to initialize standby
       ansible.builtin.command:

@@ -1,7 +1,7 @@
 - name: Promote replica
   when: postgresql_role == 'replica'
   ansible.builtin.command: "sudo -u postgres psql -c 'SELECT pg_promote();'"
-  changed_when: false
+  changed_when: true
 
 - name: Promotion message
   ansible.builtin.debug:

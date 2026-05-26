@@ -1,8 +1,111 @@
-postgresql_package: postgresql-16
+# @var postgresql_actions:description: >
+# List of actions the role does, accepts one or more actions.
+# Use comma without spaces as a delimiter for multiple actions.
+# @var postgresql_actions:required: `true`
+# @var postgresql_actions:type: String
+# @var postgresql_actions:example: >
+#   postgresql_actions: install
+#   postgresql_actions: install,upload_config
+# @end
+
+# @var postgresql_major_version:description: >
+# Major PostgreSQL version. Drives the package name, config dir, and data dir.
+# Update postgresql_version to match when changing this.
+# @var postgresql_major_version:type: Integer
+# @end
+postgresql_major_version: 16
+
+# @var postgresql_version:description: Full apt package version string for installation
+# @var postgresql_version:type: String
+# @end
 postgresql_version: 16.11-0ubuntu0.24.04.1
 
-postgresql_config_dir: /etc/postgresql/16/main
-postgresql_data_dir: /var/lib/postgresql/16/main
+# @var postgresql_package:description: PostgreSQL apt package name, derived from postgresql_major_version
+# @var postgresql_package:type: String
+# @end
+postgresql_package: "postgresql-{{ postgresql_major_version }}"
 
+# @var postgresql_config_dir:description: PostgreSQL configuration directory, derived from postgresql_major_version
+# @var postgresql_config_dir:type: String
+# @end
+postgresql_config_dir: "/etc/postgresql/{{ postgresql_major_version }}/main"
+
+# @var postgresql_data_dir:description: PostgreSQL data directory, derived from postgresql_major_version
+# @var postgresql_data_dir:type: String
+# @end
+postgresql_data_dir: "/var/lib/postgresql/{{ postgresql_major_version }}/main"
+
+# @var postgresql_file_owner:description: Owner of PostgreSQL configuration files
+# @var postgresql_file_owner:type: String
+# @end
 postgresql_file_owner: postgres
+
+# @var postgresql_file_group:description: Group of PostgreSQL configuration files
+# @var postgresql_file_group:type: String
+# @end
 postgresql_file_group: postgres
+
+# @var postgresql_data_backup:description: Whether to back up the data directory before pg_basebackup during replica setup
+# @var postgresql_data_backup:type: Boolean
+# @end
+postgresql_data_backup: true
+
+# @var postgresql_config:description: >
+# PostgreSQL configuration mapping. Supports main (postgresql.conf directives as key-value pairs)
+# and hba (pg_hba.conf entries as a list of strings).
+# @var postgresql_config:required: `true`, only when action is upload_config
+# @var postgresql_config:type: Dict
+# @var postgresql_config:example: $>
+# {
+#   "main": {
+#     "listen_addresses": "'*'",
+#     "max_connections": 100
+#   },
+#   "hba": [
+#     "local   all   all   trust",
+#     "host    replication   replicator   192.168.1.0/24   md5"
+#   ]
+# }
+# @end
+
+# @var postgresql_state:description: Target state for the PostgreSQL daemon
+# @var postgresql_state:required: `true`, only when action is state_control
+# @var postgresql_state:type: String
+# @var postgresql_state:example: >
+#   postgresql_state: restarted
+# @end
+
+# @var postgresql_role:description: Replication role for this node
+# @var postgresql_role:required: `true`, only when action is replication or promote
+# @var postgresql_role:type: String
+# @var postgresql_role:example: >
+#   postgresql_role: primary
+#   postgresql_role: replica
+# @end
+
+# @var postgresql_replication_slot:description: Replication slot name to create on primary and use on replica
+# @var postgresql_replication_slot:required: `true`, only when action is replication
+# @var postgresql_replication_slot:type: String
+# @end
+
+# @var postgresql_replication_username:description: Username for the replication user
+# @var postgresql_replication_username:required: `true`, only when action is replication
+# @var postgresql_replication_username:type: String
+# @end
+
+# @var postgresql_replication_password:description: Password for the replication user
+# @var postgresql_replication_password:required: `true`, only when action is replication
+# @var postgresql_replication_password:type: String
+# @end
+
+# @var postgresql_peer_ip:description: IP address of the peer node (primary IP on replica, replica IP on primary)
+# @var postgresql_peer_ip:required: `true`, only when action is replication
+# @var postgresql_peer_ip:type: String
+# @end
+
+# @var postgresql_ansible_temp_password:description: >
+# Temporary password for the ansible superuser role created on the primary during replication setup.
+# This role is dropped immediately after setup completes.
+# @var postgresql_ansible_temp_password:required: `true`, only when action is replication and postgresql_role is primary
+# @var postgresql_ansible_temp_password:type: String
+# @end

@@ -3,7 +3,7 @@
     that:
       - postgresql_state in postgresql_supported_states
 
-- name: Enable PostgreSQL daemon
+- name: Control PostgreSQL daemon state
   ansible.builtin.service:
     name: postgresql
     state: "{{ postgresql_state }}"
