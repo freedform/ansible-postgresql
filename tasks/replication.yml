@@ -20,11 +20,11 @@
           "DO $$
           BEGIN
             IF NOT EXISTS (
-              SELECT FROM pg_roles WHERE rolname = 'ansible'
+              SELECT FROM pg_roles WHERE rolname = '{{ postgresql_ansible_temp_username }}'
             ) THEN
-              CREATE ROLE ansible WITH LOGIN SUPERUSER PASSWORD '{{ postgresql_ansible_temp_password }}';
+              CREATE ROLE {{ postgresql_ansible_temp_username }} WITH LOGIN SUPERUSER PASSWORD '{{ postgresql_ansible_temp_password }}';
             ELSE
-              ALTER ROLE ansible WITH PASSWORD '{{ postgresql_ansible_temp_password }}';
+              ALTER ROLE {{ postgresql_ansible_temp_username }} WITH PASSWORD '{{ postgresql_ansible_temp_password }}';
             END IF;
           END
           $$;"
@@ -34,7 +34,7 @@
     - name: Configure replication user
       community.postgresql.postgresql_user:
         login_host: 127.0.0.1
-        login_user: ansible
+        login_user: "{{ postgresql_ansible_temp_username }}"
         login_password: "{{ postgresql_ansible_temp_password }}"
         login_db: postgres
         name: "{{ postgresql_replication_username }}"
@@ -46,7 +46,7 @@
     - name: Create replication slot
       community.postgresql.postgresql_slot:
         login_host: 127.0.0.1
-        login_user: ansible
+        login_user: "{{ postgresql_ansible_temp_username }}"
         login_password: "{{ postgresql_ansible_temp_password }}"
         login_db: postgres
         name: "{{ postgresql_replication_slot }}"
@@ -58,7 +58,7 @@
       ansible.builtin.command:
         cmd: >
           sudo -u postgres psql -v ON_ERROR_STOP=1 -c
-          "DROP ROLE IF EXISTS ansible;"
+          "DROP ROLE IF EXISTS {{ postgresql_ansible_temp_username }};"
       changed_when: false
 
 

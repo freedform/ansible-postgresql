@@ -8,6 +8,7 @@ Role postgresql automates installation, configuration, and replication setup of 
 - [Default Variables](#default-variables)
   - [postgresql_actions](#postgresql_actions)
   - [postgresql_ansible_temp_password](#postgresql_ansible_temp_password)
+  - [postgresql_ansible_temp_username](#postgresql_ansible_temp_username)
   - [postgresql_config](#postgresql_config)
   - [postgresql_config_base_dir](#postgresql_config_base_dir)
   - [postgresql_data_backup](#postgresql_data_backup)
@@ -51,11 +52,23 @@ Use comma without spaces as a delimiter for multiple actions.
 
 ### postgresql_ansible_temp_password
 
-Temporary password for the ansible superuser role created on the primary during replication setup.
+Temporary password for the superuser role (postgresql_ansible_temp_username) created on the primary during replication setup.
 This role is dropped immediately after setup completes.
 
 **_Required:_** `true`, only when action is replication and postgresql_role is primary<br />
 **_Type:_** String<br />
+
+### postgresql_ansible_temp_username
+
+Name of the temporary PostgreSQL superuser role created on the primary during replication setup
+
+**_Type:_** String<br />
+
+#### Default value
+
+```YAML
+postgresql_ansible_temp_username: ansible
+```
 
 ### postgresql_config
 
