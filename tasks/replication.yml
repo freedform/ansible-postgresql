@@ -33,6 +33,7 @@
 
     - name: Configure replication user
       community.postgresql.postgresql_user:
+        login_host: 127.0.0.1
         login_user: ansible
         login_password: "{{ postgresql_ansible_temp_password }}"
         login_db: postgres
@@ -44,6 +45,7 @@
 
     - name: Create replication slot
       community.postgresql.postgresql_slot:
+        login_host: 127.0.0.1
         login_user: ansible
         login_password: "{{ postgresql_ansible_temp_password }}"
         login_db: postgres
