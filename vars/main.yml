@@ -1,3 +1,7 @@
+postgresql_package: "postgresql-{{ postgresql_major_version }}"
+postgresql_config_dir: "{{ postgresql_config_base_dir }}/{{ postgresql_major_version }}/main"
+postgresql_data_dir: "{{ postgresql_data_base_dir }}/{{ postgresql_major_version }}/main"
+
 postgresql_supported_actions:
   - install
   - upload_config

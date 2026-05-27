@@ -9,13 +9,12 @@ Role postgresql automates installation, configuration, and replication setup of 
   - [postgresql_actions](#postgresql_actions)
   - [postgresql_ansible_temp_password](#postgresql_ansible_temp_password)
   - [postgresql_config](#postgresql_config)
-  - [postgresql_config_dir](#postgresql_config_dir)
+  - [postgresql_config_base_dir](#postgresql_config_base_dir)
   - [postgresql_data_backup](#postgresql_data_backup)
-  - [postgresql_data_dir](#postgresql_data_dir)
+  - [postgresql_data_base_dir](#postgresql_data_base_dir)
   - [postgresql_file_group](#postgresql_file_group)
   - [postgresql_file_owner](#postgresql_file_owner)
   - [postgresql_major_version](#postgresql_major_version)
-  - [postgresql_package](#postgresql_package)
   - [postgresql_peer_ip](#postgresql_peer_ip)
   - [postgresql_replication_password](#postgresql_replication_password)
   - [postgresql_replication_slot](#postgresql_replication_slot)
@@ -78,16 +77,16 @@ postgresql_config:
     - host    replication   replicator   192.168.1.0/24   md5
 ```
 
-### postgresql_config_dir
+### postgresql_config_base_dir
 
-PostgreSQL configuration directory, derived from postgresql_major_version
+Base directory for PostgreSQL configuration; combined with postgresql_major_version to form postgresql_config_dir
 
 **_Type:_** String<br />
 
 #### Default value
 
 ```YAML
-postgresql_config_dir: /etc/postgresql/{{ postgresql_major_version }}/main
+postgresql_config_base_dir: /etc/postgresql
 ```
 
 ### postgresql_data_backup
@@ -102,16 +101,16 @@ Whether to back up the data directory before pg_basebackup during replica setup
 postgresql_data_backup: true
 ```
 
-### postgresql_data_dir
+### postgresql_data_base_dir
 
-PostgreSQL data directory, derived from postgresql_major_version
+Base directory for PostgreSQL data; combined with postgresql_major_version to form postgresql_data_dir
 
 **_Type:_** String<br />
 
 #### Default value
 
 ```YAML
-postgresql_data_dir: /var/lib/postgresql/{{ postgresql_major_version }}/main
+postgresql_data_base_dir: /var/lib/postgresql
 ```
 
 ### postgresql_file_group
@@ -140,7 +139,8 @@ postgresql_file_owner: postgres
 
 ### postgresql_major_version
 
-Major PostgreSQL version. Drives the package name, config dir, and data dir.
+Major PostgreSQL version. Combined with postgresql_config_base_dir and postgresql_data_base_dir
+to derive postgresql_package, postgresql_config_dir, and postgresql_data_dir in vars/main.yml.
 Update postgresql_version to match when changing this.
 
 **_Type:_** Integer<br />
@@ -149,18 +149,6 @@ Update postgresql_version to match when changing this.
 
 ```YAML
 postgresql_major_version: 16
-```
-
-### postgresql_package
-
-PostgreSQL apt package name, derived from postgresql_major_version
-
-**_Type:_** String<br />
-
-#### Default value
-
-```YAML
-postgresql_package: postgresql-{{ postgresql_major_version }}
 ```
 
 ### postgresql_peer_ip

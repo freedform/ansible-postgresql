@@ -9,7 +9,8 @@
 # @end
 
 # @var postgresql_major_version:description: >
-# Major PostgreSQL version. Drives the package name, config dir, and data dir.
+# Major PostgreSQL version. Combined with postgresql_config_base_dir and postgresql_data_base_dir
+# to derive postgresql_package, postgresql_config_dir, and postgresql_data_dir in vars/main.yml.
 # Update postgresql_version to match when changing this.
 # @var postgresql_major_version:type: Integer
 # @end
@@ -20,20 +21,15 @@ postgresql_major_version: 16
 # @end
 postgresql_version: 16.11-0ubuntu0.24.04.1
 
-# @var postgresql_package:description: PostgreSQL apt package name, derived from postgresql_major_version
-# @var postgresql_package:type: String
+# @var postgresql_config_base_dir:description: Base directory for PostgreSQL configuration; combined with postgresql_major_version to form postgresql_config_dir
+# @var postgresql_config_base_dir:type: String
 # @end
-postgresql_package: "postgresql-{{ postgresql_major_version }}"
+postgresql_config_base_dir: /etc/postgresql
 
-# @var postgresql_config_dir:description: PostgreSQL configuration directory, derived from postgresql_major_version
-# @var postgresql_config_dir:type: String
+# @var postgresql_data_base_dir:description: Base directory for PostgreSQL data; combined with postgresql_major_version to form postgresql_data_dir
+# @var postgresql_data_base_dir:type: String
 # @end
-postgresql_config_dir: "/etc/postgresql/{{ postgresql_major_version }}/main"
-
-# @var postgresql_data_dir:description: PostgreSQL data directory, derived from postgresql_major_version
-# @var postgresql_data_dir:type: String
-# @end
-postgresql_data_dir: "/var/lib/postgresql/{{ postgresql_major_version }}/main"
+postgresql_data_base_dir: /var/lib/postgresql
 
 # @var postgresql_file_owner:description: Owner of PostgreSQL configuration files
 # @var postgresql_file_owner:type: String
