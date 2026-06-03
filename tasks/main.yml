@@ -1,12 +1,13 @@
 - name: Create postgresql_action_list
   ansible.builtin.set_fact:
-    postgresql_action_list: "{{ postgresql_actions.split(',') }}"
+    postgresql_action_list: "{{ (postgresql_actions | default('')).split(',') | reject('equalto', '') | list }}"
 
 - name: Validate postgresql_action_list
   ansible.builtin.assert:
     that:
       - postgresql_action_list | length > 0
       - postgresql_action_list | difference(postgresql_supported_actions) | length == 0
+    fail_msg: "postgresql_actions must be set to one or more of: {{ postgresql_supported_actions | join(', ') }}"
 
 - name: Deploy PostgreSQL
   ansible.builtin.include_tasks: "{{ task_name }}.yml"

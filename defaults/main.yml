@@ -19,7 +19,7 @@ postgresql_major_version: 16
 # @var postgresql_version:description: Full apt package version string for installation
 # @var postgresql_version:type: String
 # @end
-postgresql_version: 16.11-0ubuntu0.24.04.1
+postgresql_version: 16.14-0ubuntu0.24.04.1
 
 # @var postgresql_config_base_dir:description: Base directory for PostgreSQL configuration; combined with postgresql_major_version to form postgresql_config_dir
 # @var postgresql_config_base_dir:type: String
