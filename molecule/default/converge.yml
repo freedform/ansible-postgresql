@@ -1,48 +1,22 @@
 ---
-- name: Gather facts from all hosts
-  hosts: all
-  gather_facts: true
-
-- name: Setup primary
-  hosts: primary
+- name: Test install action, unpinned (installs latest available version)
+  hosts: unpinned
   gather_facts: false
   roles:
     - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"
       vars:
-        postgresql_actions: install,upload_config,state_control,replication
-        postgresql_role: primary
-        postgresql_state: restarted
-        postgresql_replication_slot: replica_slot
-        postgresql_replication_username: replicator
-        postgresql_replication_password: replicatorpassword
-        postgresql_peer_ip: replica
-        postgresql_ansible_temp_password: temppassword123
-        postgresql_config:
-          main:
-            data_directory: "'/var/lib/postgresql/16/main'"
-            hba_file: "'/etc/postgresql/16/main/pg_hba.conf'"
-            ident_file: "'/etc/postgresql/16/main/pg_ident.conf'"
-            listen_addresses: "'*'"
-            wal_level: replica
-            max_wal_senders: 3
-            max_replication_slots: 1
-          hba:
-            - "local   all             all                                     trust"
-            - "host    all             all             127.0.0.1/32            trust"
-            - "host    replication     replicator      0.0.0.0/0               md5"
+        postgresql_actions: install,state_control
+        postgresql_major_version: 16
+        postgresql_state: started
 
-- name: Setup replica
-  hosts: replica
+- name: Test install action, pinned to an exact PGDG version
+  hosts: pinned
   gather_facts: false
   roles:
     - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"
       vars:
-        postgresql_actions: install,replication,state_control
-        postgresql_role: replica
-        postgresql_state: restarted
-        postgresql_replication_slot: replica_slot
-        postgresql_replication_username: replicator
-        postgresql_replication_password: replicatorpassword
-        postgresql_peer_ip: primary
-        postgresql_ansible_temp_password: temppassword123
-        postgresql_data_backup: false
+        postgresql_actions: install,state_control
+        postgresql_major_version: 18
+        # Bump alongside verify.yml's postgresql_expected_version whenever PGDG ships a newer 18.x point release.
+        postgresql_version: 18.6-1.pgdg24.04+2
+        postgresql_state: started

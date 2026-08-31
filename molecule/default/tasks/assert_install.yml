@@ -1,0 +1,54 @@
+---
+# Shared assertions for the default scenario's verify.yml. Expects postgresql_expected_major_version
+# always, and postgresql_expected_version only on the host that pinned an exact version in converge.yml.
+
+- name: Gather package facts
+  ansible.builtin.package_facts:
+    manager: apt
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Assert postgresql-{{ postgresql_expected_major_version }} is installed
+  ansible.builtin.assert:
+    that:
+      - ("postgresql-" ~ postgresql_expected_major_version) in ansible_facts.packages
+    fail_msg: >-
+      postgresql-{{ postgresql_expected_major_version }} is not installed;
+      installed postgresql-* packages: {{ ansible_facts.packages.keys() | select('match', '^postgresql-[0-9]+$') | list }}
+
+- name: Assert installed version matches the pinned version
+  when: postgresql_expected_version is defined
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.packages["postgresql-" ~ postgresql_expected_major_version][0].version == postgresql_expected_version
+    fail_msg: >-
+      postgresql-{{ postgresql_expected_major_version }} is not pinned to {{ postgresql_expected_version }};
+      got {{ ansible_facts.packages["postgresql-" ~ postgresql_expected_major_version][0].version }}
+
+- name: Assert installed version belongs to the requested major version
+  when: postgresql_expected_version is not defined
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.packages["postgresql-" ~ postgresql_expected_major_version][0].version is match(postgresql_expected_major_version ~ "\\..*")
+    fail_msg: >-
+      Installed version {{ ansible_facts.packages["postgresql-" ~ postgresql_expected_major_version][0].version }}
+      does not belong to major version {{ postgresql_expected_major_version }}
+
+- name: Assert postgresql.service is enabled
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.services["postgresql.service"] is defined
+      - ansible_facts.services["postgresql.service"].status == "enabled"
+    fail_msg: "postgresql.service is not enabled: {{ ansible_facts.services['postgresql.service'] | default('not found') }}"
+
+# postgresql.service itself is a oneshot wrapper that reports "exited" (not "running") once it has done
+# its job; the actual long-running daemon is the per-cluster instance unit checked below.
+- name: Assert postgresql@{{ postgresql_expected_major_version }}-main.service is running
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.services["postgresql@" ~ postgresql_expected_major_version ~ "-main.service"] is defined
+      - ansible_facts.services["postgresql@" ~ postgresql_expected_major_version ~ "-main.service"].state == "running"
+    fail_msg: >-
+      postgresql@{{ postgresql_expected_major_version }}-main.service is not running:
+      {{ ansible_facts.services["postgresql@" ~ postgresql_expected_major_version ~ "-main.service"] | default('not found') }}

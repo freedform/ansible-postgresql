@@ -1,7 +1,6 @@
 - name: Validate variables for install.yml task
   ansible.builtin.assert:
     that:
-      - postgresql_version is defined
       - postgresql_package is defined
 
 - name: Gather distribution facts
@@ -35,7 +34,7 @@
 
 - name: Install PostgreSQL
   ansible.builtin.apt:
-    name: "{{ postgresql_package }}={{ postgresql_version }}"
+    name: "{{ postgresql_package ~ ('=' ~ postgresql_version if postgresql_version | length > 0 else '') }}"
     state: present
     update_cache: true
     allow_downgrade: true

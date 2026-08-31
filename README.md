@@ -154,7 +154,6 @@ postgresql_file_owner: postgres
 
 Major PostgreSQL version. Combined with postgresql_config_base_dir and postgresql_data_base_dir
 to derive postgresql_package, postgresql_config_dir, and postgresql_data_dir in vars/main.yml.
-Update postgresql_version to match when changing this.
 
 **_Type:_** Integer<br />
 
@@ -221,14 +220,17 @@ Target state for the PostgreSQL daemon
 
 ### postgresql_version
 
-Full apt package version string for installation
+Exact apt package version string to pin the install to, e.g. 18.6-1.pgdg24.04+2. Must match the
+version format published in the PGDG repo for the target distribution release, not the Ubuntu/Debian
+archive format - the two differ. Left empty by default, which installs the latest version available
+for postgresql_major_version in the enabled PGDG repo instead of pinning to a specific one.
 
 **_Type:_** String<br />
 
 #### Default value
 
 ```YAML
-postgresql_version: 16.11-0ubuntu0.24.04.1
+postgresql_version: ''
 ```
 
 ## Dependencies

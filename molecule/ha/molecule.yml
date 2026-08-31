@@ -4,20 +4,22 @@ dependency:
 driver:
   name: podman
 platforms:
-  - name: unpinned
+  - name: primary
     image: docker.io/geerlingguy/docker-ubuntu2404-ansible
     pre_build_image: true
     privileged: true
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     command: /lib/systemd/systemd
-  - name: pinned
+    network: pgnet
+  - name: replica
     image: docker.io/geerlingguy/docker-ubuntu2404-ansible
     pre_build_image: true
     privileged: true
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     command: /lib/systemd/systemd
+    network: pgnet
 provisioner:
   name: ansible
 verifier:
@@ -29,6 +31,7 @@ scenario:
     - destroy
     - syntax
     - create
+    - prepare
     - converge
     - verify
     - cleanup

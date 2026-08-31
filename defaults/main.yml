@@ -11,15 +11,18 @@
 # @var postgresql_major_version:description: >
 # Major PostgreSQL version. Combined with postgresql_config_base_dir and postgresql_data_base_dir
 # to derive postgresql_package, postgresql_config_dir, and postgresql_data_dir in vars/main.yml.
-# Update postgresql_version to match when changing this.
 # @var postgresql_major_version:type: Integer
 # @end
 postgresql_major_version: 16
 
-# @var postgresql_version:description: Full apt package version string for installation
+# @var postgresql_version:description: >
+# Exact apt package version string to pin the install to, e.g. 18.6-1.pgdg24.04+2. Must match the
+# version format published in the PGDG repo for the target distribution release, not the Ubuntu/Debian
+# archive format - the two differ. Left empty by default, which installs the latest version available
+# for postgresql_major_version in the enabled PGDG repo instead of pinning to a specific one.
 # @var postgresql_version:type: String
 # @end
-postgresql_version: 16.14-0ubuntu0.24.04.1
+postgresql_version: ""
 
 # @var postgresql_config_base_dir:description: Base directory for PostgreSQL configuration; combined with postgresql_major_version to form postgresql_config_dir
 # @var postgresql_config_base_dir:type: String
