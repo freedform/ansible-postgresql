@@ -1,6 +1,7 @@
 ---
-# Shared assertions for the default scenario's verify.yml. Expects postgresql_expected_major_version
-# always, and postgresql_expected_version only on the host that pinned an exact version in converge.yml.
+# Shared assertions, imported by the default and ha scenarios' verify.yml. Expects
+# postgresql_expected_major_version always, and postgresql_expected_version only on hosts that pinned
+# an exact version in their scenario's converge.yml.
 
 - name: Gather package facts
   ansible.builtin.package_facts:

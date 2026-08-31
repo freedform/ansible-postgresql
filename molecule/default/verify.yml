@@ -6,15 +6,14 @@
     postgresql_expected_major_version: 16
   tasks:
     - name: Run install assertions
-      ansible.builtin.import_tasks: tasks/assert_install.yml
+      ansible.builtin.import_tasks: ../common/tasks/assert_install.yml
 
 - name: Verify pinned host installed the exact requested version
   hosts: pinned
   gather_facts: false
   vars:
     postgresql_expected_major_version: 18
-    # Bump alongside converge.yml's postgresql_version whenever PGDG ships a newer 18.x point release.
-    postgresql_expected_version: 18.6-1.pgdg24.04+2
+    postgresql_expected_version: "{{ postgresql_pinned_version }}"
   tasks:
     - name: Run install assertions
-      ansible.builtin.import_tasks: tasks/assert_install.yml
+      ansible.builtin.import_tasks: ../common/tasks/assert_install.yml

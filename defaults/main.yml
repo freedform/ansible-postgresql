@@ -18,8 +18,10 @@ postgresql_major_version: 16
 # @var postgresql_version:description: >
 # Exact apt package version string to pin the install to, e.g. 18.6-1.pgdg24.04+2. Must match the
 # version format published in the PGDG repo for the target distribution release, not the Ubuntu/Debian
-# archive format - the two differ. Left empty by default, which installs the latest version available
-# for postgresql_major_version in the enabled PGDG repo instead of pinning to a specific one.
+# archive format - the two differ. Left empty by default, which installs whatever is latest for
+# postgresql_major_version in the enabled PGDG repo at the time of the first install on a given host.
+# Since the apt task uses state: present, later runs will not upgrade an already-installed version -
+# leaving this empty does not keep the host tracking the newest point release over time.
 # @var postgresql_version:type: String
 # @end
 postgresql_version: ""
