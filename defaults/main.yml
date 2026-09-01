@@ -104,14 +104,3 @@ postgresql_data_backup: true
 # @var postgresql_peer_ip:type: String
 # @end
 
-# @var postgresql_ansible_temp_username:description: Name of the temporary PostgreSQL superuser role created on the primary during replication setup
-# @var postgresql_ansible_temp_username:type: String
-# @end
-postgresql_ansible_temp_username: ansible
-
-# @var postgresql_ansible_temp_password:description: >
-# Temporary password for the superuser role (postgresql_ansible_temp_username) created on the primary during replication setup.
-# This role is dropped immediately after setup completes.
-# @var postgresql_ansible_temp_password:required: `true`, only when action is replication and postgresql_role is primary
-# @var postgresql_ansible_temp_password:type: String
-# @end

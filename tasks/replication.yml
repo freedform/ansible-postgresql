@@ -8,35 +8,16 @@
       - postgresql_replication_password is defined
       - postgresql_peer_ip is defined
       - postgresql_data_dir is defined
-      - postgresql_ansible_temp_password is defined
 
 - name: Actions for primary node
   when: postgresql_role == "primary"
+  become: true
+  become_user: postgres
+  vars:
+    ansible_pipelining: true
   block:
-    - name: Ensure temporary ansible DB role exists with password
-      ansible.builtin.command:
-        cmd: >
-          sudo -u postgres psql -v ON_ERROR_STOP=1 -tAc
-          "DO $$
-          BEGIN
-            IF NOT EXISTS (
-              SELECT FROM pg_roles WHERE rolname = '{{ postgresql_ansible_temp_username }}'
-            ) THEN
-              CREATE ROLE {{ postgresql_ansible_temp_username }} WITH LOGIN SUPERUSER PASSWORD '{{ postgresql_ansible_temp_password }}';
-            ELSE
-              ALTER ROLE {{ postgresql_ansible_temp_username }} WITH PASSWORD '{{ postgresql_ansible_temp_password }}';
-            END IF;
-          END
-          $$;"
-      changed_when: false
-      no_log: true
-
     - name: Configure replication user
       community.postgresql.postgresql_user:
-        login_host: 127.0.0.1
-        login_user: "{{ postgresql_ansible_temp_username }}"
-        login_password: "{{ postgresql_ansible_temp_password }}"
-        login_db: postgres
         name: "{{ postgresql_replication_username }}"
         password: "{{ postgresql_replication_password }}"
         role_attr_flags: REPLICATION,LOGIN
@@ -45,22 +26,10 @@
 
     - name: Create replication slot
       community.postgresql.postgresql_slot:
-        login_host: 127.0.0.1
-        login_user: "{{ postgresql_ansible_temp_username }}"
-        login_password: "{{ postgresql_ansible_temp_password }}"
-        login_db: postgres
         name: "{{ postgresql_replication_slot }}"
         slot_type: physical
         state: present
       no_log: true
-
-    - name: Remove temporary ansible DB role
-      ansible.builtin.command:
-        cmd: >
-          sudo -u postgres psql -v ON_ERROR_STOP=1 -c
-          "DROP ROLE IF EXISTS {{ postgresql_ansible_temp_username }};"
-      changed_when: false
-
 
 - name: Actions for replica node
   when: postgresql_role == "replica"

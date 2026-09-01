@@ -7,8 +7,6 @@ Role postgresql automates installation, configuration, and replication setup of 
 - [Requirements](#requirements)
 - [Default Variables](#default-variables)
   - [postgresql_actions](#postgresql_actions)
-  - [postgresql_ansible_temp_password](#postgresql_ansible_temp_password)
-  - [postgresql_ansible_temp_username](#postgresql_ansible_temp_username)
   - [postgresql_config](#postgresql_config)
   - [postgresql_config_base_dir](#postgresql_config_base_dir)
   - [postgresql_data_backup](#postgresql_data_backup)
@@ -32,6 +30,10 @@ Role postgresql automates installation, configuration, and replication setup of 
 ## Requirements
 
 - Minimum Ansible version: `2.20`
+- For the `replication` action on a `postgresql_role: primary` node: `ansible_python_interpreter`
+  must be executable by the `postgres` OS user and have `psycopg2` installed. These tasks run as
+  `postgres` via `become`, so an interpreter reachable only by the connection user (e.g. a venv
+  under that user's home directory with restrictive permissions) will not work.
 
 ## Default Variables
 
@@ -48,26 +50,6 @@ Use comma without spaces as a delimiter for multiple actions.
 ```YAML
   postgresql_actions: install
   postgresql_actions: install,upload_config
-```
-
-### postgresql_ansible_temp_password
-
-Temporary password for the superuser role (postgresql_ansible_temp_username) created on the primary during replication setup.
-This role is dropped immediately after setup completes.
-
-**_Required:_** `true`, only when action is replication and postgresql_role is primary<br />
-**_Type:_** String<br />
-
-### postgresql_ansible_temp_username
-
-Name of the temporary PostgreSQL superuser role created on the primary during replication setup
-
-**_Type:_** String<br />
-
-#### Default value
-
-```YAML
-postgresql_ansible_temp_username: ansible
 ```
 
 ### postgresql_config

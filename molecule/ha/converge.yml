@@ -16,7 +16,6 @@
         postgresql_replication_username: replicator
         postgresql_replication_password: replicatorpassword
         postgresql_peer_ip: replica
-        postgresql_ansible_temp_password: temppassword123
         postgresql_config:
           main:
             data_directory: "'/var/lib/postgresql/16/main'"
@@ -44,5 +43,4 @@
         postgresql_replication_username: replicator
         postgresql_replication_password: replicatorpassword
         postgresql_peer_ip: primary
-        postgresql_ansible_temp_password: temppassword123
         postgresql_data_backup: false
