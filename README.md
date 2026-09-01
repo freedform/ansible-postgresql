@@ -17,9 +17,11 @@ Role postgresql automates installation, configuration, and replication setup of 
   - [postgresql_peer_ip](#postgresql_peer_ip)
   - [postgresql_replication_password](#postgresql_replication_password)
   - [postgresql_replication_slot](#postgresql_replication_slot)
+  - [postgresql_replication_slots](#postgresql_replication_slots)
   - [postgresql_replication_username](#postgresql_replication_username)
   - [postgresql_role](#postgresql_role)
   - [postgresql_state](#postgresql_state)
+  - [postgresql_users](#postgresql_users)
   - [postgresql_version](#postgresql_version)
 - [Dependencies](#dependencies)
 - [License](#license)
@@ -30,10 +32,11 @@ Role postgresql automates installation, configuration, and replication setup of 
 ## Requirements
 
 - Minimum Ansible version: `2.20`
-- For the `replication` action on a `postgresql_role: primary` node: `ansible_python_interpreter`
-  must be executable by the `postgres` OS user and have `psycopg2` installed. These tasks run as
-  `postgres` via `become`, so an interpreter reachable only by the connection user (e.g. a venv
-  under that user's home directory with restrictive permissions) will not work.
+- For the `replication` action on a `postgresql_role: primary` node, and for the `deploy_users`
+  action: `ansible_python_interpreter` must be executable by the `postgres` OS user and have
+  `psycopg2` installed. These tasks run as `postgres` via `become`, so an interpreter reachable
+  only by the connection user (e.g. a venv under that user's home directory with restrictive
+  permissions) will not work.
 
 ## Default Variables
 
@@ -50,6 +53,7 @@ Use comma without spaces as a delimiter for multiple actions.
 ```YAML
   postgresql_actions: install
   postgresql_actions: install,upload_config
+  postgresql_actions: install,replication,deploy_users
 ```
 
 ### postgresql_config
@@ -147,30 +151,49 @@ postgresql_major_version: 16
 
 ### postgresql_peer_ip
 
-IP address of the peer node (primary IP on replica, replica IP on primary)
+IP address of the primary node, used by the replica to reach it
 
-**_Required:_** `true`, only when action is replication<br />
+**_Required:_** `true`, only when action is replication and postgresql_role is replica<br />
 **_Type:_** String<br />
 
 ### postgresql_replication_password
 
-Password for the replication user
+Password for the replication user, used to connect to the primary via pg_basebackup
 
-**_Required:_** `true`, only when action is replication<br />
+**_Required:_** `true`, only when action is replication and postgresql_role is replica<br />
 **_Type:_** String<br />
 
 ### postgresql_replication_slot
 
-Replication slot name to create on primary and use on replica
+Replication slot name to use for pg_basebackup, must already exist on the primary
 
-**_Required:_** `true`, only when action is replication<br />
+**_Required:_** `true`, only when action is replication and postgresql_role is replica<br />
 **_Type:_** String<br />
+
+### postgresql_replication_slots
+
+Replication slots to create on the primary node. List of dicts; each item is passed as parameters
+to community.postgresql.postgresql_slot (name is required, slot_type defaults to physical and
+state defaults to present, both overridable per item).
+
+**_Required:_** `true`, only when action is replication and postgresql_role is primary<br />
+**_Type:_** List<br />
+
+#### Example usage
+
+```YAML
+postgresql_replication_slots:
+  - name: replica_slot
+  - name: reporting_slot
+    slot_type: logical
+    db: analytics
+```
 
 ### postgresql_replication_username
 
-Username for the replication user
+Username for the replication user, used to connect to the primary via pg_basebackup
 
-**_Required:_** `true`, only when action is replication<br />
+**_Required:_** `true`, only when action is replication and postgresql_role is replica<br />
 **_Type:_** String<br />
 
 ### postgresql_role
@@ -198,6 +221,28 @@ Target state for the PostgreSQL daemon
 
 ```YAML
   postgresql_state: restarted
+```
+
+### postgresql_users
+
+PostgreSQL users/roles to create on the primary node via the deploy_users action (this includes
+replication users - create them here with role_attr_flags: REPLICATION,LOGIN). List of dicts; each
+item is passed as parameters to community.postgresql.postgresql_user (name is required, state
+defaults to present and is overridable per item).
+
+**_Required:_** `true`, only when action is deploy_users<br />
+**_Type:_** List<br />
+
+#### Example usage
+
+```YAML
+postgresql_users:
+  - name: app_user
+    password: app_password
+    priv: "mydb:ALL"
+  - name: replicator
+    password: replicatorpassword
+    role_attr_flags: REPLICATION,LOGIN
 ```
 
 ### postgresql_version

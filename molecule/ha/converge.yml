@@ -9,13 +9,15 @@
   roles:
     - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"
       vars:
-        postgresql_actions: install,upload_config,state_control,replication
+        postgresql_actions: install,upload_config,state_control,deploy_users,replication
         postgresql_role: primary
         postgresql_state: restarted
-        postgresql_replication_slot: replica_slot
-        postgresql_replication_username: replicator
-        postgresql_replication_password: replicatorpassword
-        postgresql_peer_ip: replica
+        postgresql_users:
+          - name: replicator
+            password: replicatorpassword
+            role_attr_flags: REPLICATION,LOGIN
+        postgresql_replication_slots:
+          - name: replica_slot
         postgresql_config:
           main:
             data_directory: "'/var/lib/postgresql/16/main'"

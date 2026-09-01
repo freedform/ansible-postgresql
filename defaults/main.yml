@@ -6,6 +6,7 @@
 # @var postgresql_actions:example: >
 #   postgresql_actions: install
 #   postgresql_actions: install,upload_config
+#   postgresql_actions: install,replication,deploy_users
 # @end
 
 # @var postgresql_major_version:description: >
@@ -84,23 +85,54 @@ postgresql_data_backup: true
 #   postgresql_role: replica
 # @end
 
-# @var postgresql_replication_slot:description: Replication slot name to create on primary and use on replica
-# @var postgresql_replication_slot:required: `true`, only when action is replication
+# @var postgresql_replication_slot:description: Replication slot name to use for pg_basebackup, must already exist on the primary
+# @var postgresql_replication_slot:required: `true`, only when action is replication and postgresql_role is replica
 # @var postgresql_replication_slot:type: String
 # @end
 
-# @var postgresql_replication_username:description: Username for the replication user
-# @var postgresql_replication_username:required: `true`, only when action is replication
+# @var postgresql_replication_slots:description: >
+# Replication slots to create on the primary node. List of dicts; each item is passed as parameters
+# to community.postgresql.postgresql_slot (name is required, slot_type defaults to physical and
+# state defaults to present, both overridable per item).
+# @var postgresql_replication_slots:required: `true`, only when action is replication and postgresql_role is primary
+# @var postgresql_replication_slots:type: List
+# @var postgresql_replication_slots:example: >
+#   postgresql_replication_slots:
+#     - name: replica_slot
+#     - name: reporting_slot
+#       slot_type: logical
+#       db: analytics
+# @end
+
+# @var postgresql_replication_username:description: Username for the replication user, used to connect to the primary via pg_basebackup
+# @var postgresql_replication_username:required: `true`, only when action is replication and postgresql_role is replica
 # @var postgresql_replication_username:type: String
 # @end
 
-# @var postgresql_replication_password:description: Password for the replication user
-# @var postgresql_replication_password:required: `true`, only when action is replication
+# @var postgresql_replication_password:description: Password for the replication user, used to connect to the primary via pg_basebackup
+# @var postgresql_replication_password:required: `true`, only when action is replication and postgresql_role is replica
 # @var postgresql_replication_password:type: String
 # @end
 
-# @var postgresql_peer_ip:description: IP address of the peer node (primary IP on replica, replica IP on primary)
-# @var postgresql_peer_ip:required: `true`, only when action is replication
+# @var postgresql_peer_ip:description: IP address of the primary node, used by the replica to reach it
+# @var postgresql_peer_ip:required: `true`, only when action is replication and postgresql_role is replica
 # @var postgresql_peer_ip:type: String
+# @end
+
+# @var postgresql_users:description: >
+# PostgreSQL users/roles to create on the primary node via the deploy_users action (this includes
+# replication users - create them here with role_attr_flags: REPLICATION,LOGIN). List of dicts; each
+# item is passed as parameters to community.postgresql.postgresql_user (name is required, state
+# defaults to present and is overridable per item).
+# @var postgresql_users:required: `true`, only when action is deploy_users
+# @var postgresql_users:type: List
+# @var postgresql_users:example: >
+#   postgresql_users:
+#     - name: app_user
+#       password: app_password
+#       priv: "mydb:ALL"
+#     - name: replicator
+#       password: replicatorpassword
+#       role_attr_flags: REPLICATION,LOGIN
 # @end
 

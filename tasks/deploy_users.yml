@@ -1,0 +1,21 @@
+- name: Validate variables for deploy_users.yml task
+  ansible.builtin.assert:
+    that:
+      - postgresql_role is defined
+      - postgresql_role == "primary"
+      - postgresql_users is defined
+      - postgresql_users is iterable
+      - postgresql_users is not string
+      - postgresql_users | length > 0
+    fail_msg: "deploy_users action requires postgresql_role: primary and a non-empty postgresql_users list."
+
+- name: Deploy PostgreSQL users
+  become: true
+  become_user: postgres
+  vars:
+    ansible_pipelining: true
+  community.postgresql.postgresql_user: "{{ {'state': 'present'} | combine(item) }}"
+  loop: "{{ postgresql_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  no_log: true

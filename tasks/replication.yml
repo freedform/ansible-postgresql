@@ -1,8 +1,23 @@
-- name: Validate variables for replication.yml task
+- name: Validate common variables for replication.yml task
   ansible.builtin.assert:
     that:
       - postgresql_role is defined
       - postgresql_role in postgresql_supported_roles
+
+- name: Validate variables for primary role
+  when: postgresql_role == "primary"
+  ansible.builtin.assert:
+    that:
+      - postgresql_replication_slots is defined
+      - postgresql_replication_slots is iterable
+      - postgresql_replication_slots is not string
+      - postgresql_replication_slots | length > 0
+    fail_msg: "postgresql_replication_slots must be a non-empty list when postgresql_role is primary."
+
+- name: Validate variables for replica role
+  when: postgresql_role == "replica"
+  ansible.builtin.assert:
+    that:
       - postgresql_replication_slot is defined
       - postgresql_replication_username is defined
       - postgresql_replication_password is defined
@@ -16,19 +31,11 @@
   vars:
     ansible_pipelining: true
   block:
-    - name: Configure replication user
-      community.postgresql.postgresql_user:
-        name: "{{ postgresql_replication_username }}"
-        password: "{{ postgresql_replication_password }}"
-        role_attr_flags: REPLICATION,LOGIN
-        state: present
-      no_log: true
-
-    - name: Create replication slot
-      community.postgresql.postgresql_slot:
-        name: "{{ postgresql_replication_slot }}"
-        slot_type: physical
-        state: present
+    - name: Create replication slots
+      community.postgresql.postgresql_slot: "{{ {'slot_type': 'physical', 'state': 'present'} | combine(item) }}"
+      loop: "{{ postgresql_replication_slots }}"
+      loop_control:
+        label: "{{ item.name }}"
       no_log: true
 
 - name: Actions for replica node

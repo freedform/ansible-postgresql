@@ -8,6 +8,7 @@ postgresql_supported_actions:
   - replication
   - promote
   - state_control
+  - deploy_users
 
 postgresql_supported_states:
   - started
